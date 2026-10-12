@@ -12,10 +12,15 @@ import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.model.Media;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +72,10 @@ public class DiaryAiService {
         try {
             List<Media> mediaList = new ArrayList<>();
             for (String url : imageUrls) {
-                mediaList.add(new Media(MimeTypeUtils.IMAGE_JPEG, new URL(url)));
+                // s3 사용시
+                //mediaList.add(new Media(MimeTypeUtils.IMAGE_JPEG, new URL(url)));
+                // rustFS 사용시 openAI는 주소가 localhost인 이미지를 다운받지 못하므로 아래와같이 수정
+                mediaList.add(toMedia(url));
             }
 
             UserMessage userMessage = new UserMessage(
@@ -85,5 +93,36 @@ public class DiaryAiService {
             log.error("AI Analysis Failed", e);
             throw new RuntimeException("AI 일기 생성 실패");
         }
+    }
+    // rustFS 사용시 openAI는 주소가 localhost인 이미지를 다운받지 못하므로 아래의 메소드 추가
+    private Media toMedia(String imageUrl) throws IOException {
+        URL url = new URL(imageUrl);
+        URLConnection connection = url.openConnection();
+        connection.setConnectTimeout(3_000);
+        connection.setReadTimeout(10_000);
+
+        String contentType = connection.getContentType();
+        MimeType mimeType = (contentType != null && contentType.startsWith("image/"))
+                ? MimeTypeUtils.parseMimeType(contentType)
+                : MimeTypeUtils.IMAGE_JPEG;
+
+        byte[] imageBytes;
+        try (InputStream inputStream = connection.getInputStream()) {
+            imageBytes = inputStream.readAllBytes();
+        }
+
+        return new Media(mimeType, new ByteArrayResource(imageBytes) {
+            @Override
+            public String getFilename() {
+                return getFileName(imageUrl);
+            }
+        });
+    }
+
+    private String getFileName(String imageUrl) {
+        int queryIndex = imageUrl.indexOf('?');
+        String urlWithoutQuery = queryIndex >= 0 ? imageUrl.substring(0, queryIndex) : imageUrl;
+        int slashIndex = urlWithoutQuery.lastIndexOf('/');
+        return slashIndex >= 0 ? urlWithoutQuery.substring(slashIndex + 1) : "image";
     }
 }

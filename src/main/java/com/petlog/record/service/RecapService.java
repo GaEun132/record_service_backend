@@ -17,7 +17,7 @@ public interface RecapService {
      * @return 생성된 리캡 고유 ID
      */
     Long createAiRecap(RecapRequest.Generate request);
-
+    Long createAiRecapWithRabbitMQ(RecapRequest.Generate request);
     /**
      * [리캡 생성 예약]
      * 사용자가 리캡 생성을 요청했으나 데이터 부족 등으로 즉시 생성이 어려울 때

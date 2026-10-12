@@ -21,4 +21,6 @@ public interface RecapAiService {
      * @return AI가 생성한 구조화된 분석 응답 객체
      */
     RecapAiResponse analyzeMonth(String petName, int year, int month, List<String> diaryEntries);
+
+    RecapAiResponse analyzeMonthFake(String petName, int year, int month, List<String> diaryTexts);
 }

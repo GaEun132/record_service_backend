@@ -67,10 +67,12 @@ dependencies {
     // ✅ 추가: 애플리케이션 상태(Kafka 연결 상태 등) 모니터링을 위해 추천합니다.
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
+    // Observability
+    implementation 'io.micrometer:micrometer-registry-prometheus'
     // ========================================
     // Messaging & Cloud
     // ========================================
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
