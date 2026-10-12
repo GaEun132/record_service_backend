@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * [AI 월간 분석 서비스 구현체]
@@ -33,7 +34,8 @@ public class RecapAiServiceImpl implements RecapAiService {
      * @return AI 분석 결과 객체 (RecapAiResponse)
      */
     @Override
-    public RecapAiResponse analyzeMonth(String petName, int year, int month, List<String> diaryEntries) {
+    public RecapAiResponse analyzeMonth(String petName, int year, int month, List<String> diaryEntries) throws RuntimeException {
+
         BeanOutputConverter<RecapAiResponse> converter = new BeanOutputConverter<>(RecapAiResponse.class);
 
         String userPromptText = """
@@ -61,5 +63,18 @@ public class RecapAiServiceImpl implements RecapAiService {
 
         var response = chatModel.call(prompt);
         return converter.convert(response.getResult().getOutput().getContent());
+    }
+    @Override
+    public RecapAiResponse analyzeMonthFake(String petName, int year, int month, List<String> diaryTexts) {
+        sleep(ThreadLocalRandom.current().nextLong(3000, 8000)); // 실제 LLM 지연 흉내
+        return RecapAiResponse.builder()
+                .title("테스트 리캡")
+                .summary("테스트 요약")
+                .highlights(List.of())
+                .build();
+    }
+
+    private void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 }

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: petlog
+    name: record-service
 
   profiles:
     active: dev
@@ -11,6 +11,14 @@ spring:
   # ========================================
   # Kafka 설정 (spring: 바로 아래로 이동)
   # ========================================
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
   kafka:
     # bootstrap-servers: localhost:19092
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
@@ -94,6 +102,17 @@ logging:
   level:
     com.petlog.diary: DEBUG
     org.springframework.kafka: INFO
+  file:
+    name: ${LOG_FILE:/Users/gaeun/Documents/projects/my_project/petlog_be/record-service/logs/record-service.log}
+  structured:
+    format:
+      console: logstash # springboot에서 logstash 형식의 json 출력을 지원
+      file: logstash
+    json:
+      add:
+        service_name: "${spring.application.name}"
+        service_namespace: petlog
+
 
 # ========================================
 # 외부 서비스 및 API 엔드포인트
@@ -116,5 +135,25 @@ external:
     api-key: ${WEATHER_API_KEY}
     asos-api-key: ${ASOS_API_KEY}
 
+rabbitmq:
+  coin:
+    exchange: ${RABBITMQ_COIN_EXCHANGE:coin.exchange}
+    earn-queue: ${RABBITMQ_COIN_EARN_QUEUE:coin.earn.queue}
+    earn-routing-key: ${RABBITMQ_COIN_EARN_ROUTING_KEY:coin.earn}
+
 kakao:
   rest-api-key: ${KAKAO_REST_API_KEY}
+
+# prometheus 및 actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
